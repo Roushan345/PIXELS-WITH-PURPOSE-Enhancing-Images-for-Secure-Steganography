@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+
+# Local test artifacts
+test_image.jpg
+stego_test.png
+test_stego.py
+
+# Tunnel binaries and local tools
+cloudflared.exe
+cf.exe
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
