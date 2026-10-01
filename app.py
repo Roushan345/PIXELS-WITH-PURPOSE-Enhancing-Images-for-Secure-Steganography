@@ -870,5 +870,21 @@ def download_secret():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.errorhandler(404)
+def handle_404(e):
+    return jsonify({
+        'error': 'Endpoint not found',
+        'requested_path': request.path,
+        'method': request.method,
+        'environ_path_info': request.environ.get('PATH_INFO'),
+        'environ_script_name': request.environ.get('SCRIPT_NAME')
+    }), 404
+
+@app.errorhandler(500)
+def handle_500(e):
+    return jsonify({
+        'error': f'Server internal error: {str(e)}'
+    }), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
