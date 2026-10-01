@@ -170,7 +170,9 @@ def get_channel_indices(shape, channel_mode, password_seed):
         return [(p * 3 + c) for p in range(total_pixels)]
     elif channel_mode == CHANNEL_ADAPTIVE:
         rng = random.Random(password_seed)
-        return [(p * 3 + rng.randint(0, 2)) for p in range(total_pixels)]
+        indices = list(range(H * W * C))
+        rng.shuffle(indices)
+        return indices
     return list(range(H * W * C))
 
 def embed_tier2(img_array, payload_bytes: bytes, password: str, payload_type=TYPE_TEXT, lsb_depth=1, channel_mode=CHANNEL_ALL):
@@ -585,18 +587,58 @@ def embed():
         if len(password) < 4:
             return jsonify({'error': 'Password must be at least 4 characters'}), 400
 
+        # Load cover image first to calculate capacity
+        img = Image.open(file.stream).convert('RGB')
+        img_array = np.array(img)
+        original_b64 = image_to_base64(img)
+
+        # Calculate exact capacity for chosen channel mode and LSB depth
+        total_elements = img_array.size
+        if channel_mode in (CHANNEL_RED, CHANNEL_GREEN, CHANNEL_BLUE):
+            channel_elements = total_elements // 3
+        else:
+            channel_elements = total_elements
+
+        # Available raw payload capacity (accounting for header, salt, IV, HMAC, zlib overhead)
+        max_payload_bytes = max(10, ((channel_elements - 480) * lsb_depth) // 8 - 64)
+
         # Prepare payload bytes
         if payload_type == 'image':
             if 'secret_image' not in request.files:
                 return jsonify({'error': 'Please upload a secret image to hide'}), 400
             secret_file = request.files['secret_image']
+            raw_uploaded_bytes = secret_file.read()
+            secret_file.seek(0)
+
             sec_img = Image.open(secret_file.stream)
-            # Normalize to RGB or RGBA PNG
-            sec_buf = io.BytesIO()
-            sec_img.save(sec_buf, format='PNG', optimize=True)
-            payload_bytes = sec_buf.getvalue()
+            orig_w, orig_h = sec_img.width, sec_img.height
+
+            # If original file is already within capacity (e.g. JPEG, PNG, WebP)
+            if len(raw_uploaded_bytes) <= max_payload_bytes:
+                payload_bytes = raw_uploaded_bytes
+                payload_info_label = f"Secret Image ({orig_w}x{orig_h}, {len(payload_bytes)/1024:.1f} KB)"
+            else:
+                # Intelligently scale down and optimize secret image to fit comfortably inside cover
+                scale = math.sqrt(max_payload_bytes / max(len(raw_uploaded_bytes), 1)) * 0.88
+                new_w = max(24, int(orig_w * scale))
+                new_h = max(24, int(orig_h * scale))
+                scaled = sec_img.copy().resize((new_w, new_h), Image.Resampling.LANCZOS)
+                
+                buf = io.BytesIO()
+                if sec_img.mode in ('RGBA', 'LA') or (sec_img.mode == 'P' and 'transparency' in sec_img.info):
+                    scaled.save(buf, format='PNG', optimize=True)
+                else:
+                    scaled.convert('RGB').save(buf, format='JPEG', quality=80, optimize=True)
+                payload_bytes = buf.getvalue()
+
+                # If still slightly over, lower quality slightly
+                if len(payload_bytes) > max_payload_bytes:
+                    buf = io.BytesIO()
+                    scaled.convert('RGB').save(buf, format='JPEG', quality=60, optimize=True)
+                    payload_bytes = buf.getvalue()
+
+                payload_info_label = f"Secret Image (Auto-fit to {new_w}x{new_h}, {len(payload_bytes)/1024:.1f} KB)"
             p_type_code = TYPE_IMAGE
-            payload_info_label = f"Secret Image ({sec_img.width}x{sec_img.height}, {len(payload_bytes)/1024:.1f} KB)"
         else:
             message = request.form.get('message', '').strip()
             if not message:
@@ -604,11 +646,6 @@ def embed():
             payload_bytes = message.encode('utf-8')
             p_type_code = TYPE_TEXT
             payload_info_label = f"Secret Text ({len(message)} characters)"
-
-        # Load cover image
-        img = Image.open(file.stream).convert('RGB')
-        img_array = np.array(img)
-        original_b64 = image_to_base64(img)
 
         # Run Tier 2 Embedding
         stego_array = embed_tier2(
@@ -629,15 +666,6 @@ def embed():
         ssim = compute_ssim(img_array, stego_array)
         diff_b64 = generate_diff_map_base64(img_array, stego_array)
 
-        # Calculate capacity
-        total_elements = img_array.size
-        # Account for selected channel mode capacity
-        if channel_mode in (CHANNEL_RED, CHANNEL_GREEN, CHANNEL_BLUE):
-            channel_elements = total_elements // 3
-        else:
-            channel_elements = total_elements
-
-        max_payload_bytes = ((channel_elements - 480) * lsb_depth) // 8
         capacity_used_pct = round((len(payload_bytes) / max(max_payload_bytes, 1)) * 100, 2)
 
         return jsonify({
