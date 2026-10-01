@@ -3,286 +3,795 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pixels with Purpose – Steganography Tool</title>
+<title>Pixels with Purpose – Advanced Steganography & Forensics</title>
+<meta name="description" content="Tier 2 Advanced Steganography Tool: AES-256-CBC, HMAC-SHA256 authenticated encryption, multi-channel embedding, 1/2-bit LSB, image-in-image hiding, and forensic steganalysis."/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --border: #30363d;
-    --accent: #58a6ff;
-    --accent2: #3fb950;
-    --warn: #f0883e;
-    --danger: #f85149;
-    --text: #e6edf3;
-    --muted: #8b949e;
-    --card: #21262d;
+    --bg: #06090f;
+    --bg2: #0a0f1a;
+    --surface: #111827;
+    --surface2: #1a2332;
+    --border: #1e293b;
+    --border-glow: #334155;
+    --accent: #60a5fa;
+    --accent-bright: #93c5fd;
+    --accent2: #34d399;
+    --accent2-bright: #6ee7b7;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --danger-deep: #ef4444;
+    --text: #e2e8f0;
+    --text-bright: #f1f5f9;
+    --muted: #64748b;
+    --muted-light: #94a3b8;
+    --card: #0f172a;
+    --card-hover: #162033;
+    --purple: #a78bfa;
+    --purple-glow: #7c3aed;
+    --cyan: #22d3ee;
+    --emerald: #10b981;
+    --rose: #fb7185;
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── ANIMATED BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(96, 165, 250, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 50%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 20% 80%, rgba(52, 211, 153, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
   }
 
   /* ── HEADER ── */
   header {
-    background: linear-gradient(135deg, #0d1117 0%, #1a237e22 100%);
+    position: relative;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(6, 9, 15, 0.98) 100%);
     border-bottom: 1px solid var(--border);
-    padding: 1.5rem 2rem;
+    padding: 1.2rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    z-index: 10;
+    backdrop-filter: blur(20px);
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
+    opacity: 0.4;
+  }
+
+  .logo-group {
     display: flex;
     align-items: center;
     gap: 1rem;
   }
-  .logo { font-size: 2rem; }
-  header h1 { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
-  header p  { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
-  .badge {
-    margin-left: auto;
-    background: #238636;
-    color: #fff;
-    font-size: 0.7rem;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-weight: 600;
+
+  .logo {
+    width: 46px; height: 46px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 15px rgba(96, 165, 250, 0.25);
+    animation: logoPulse 3s ease-in-out infinite;
+  }
+  @keyframes logoPulse {
+    0%, 100% { box-shadow: 0 4px 15px rgba(96, 165, 250, 0.25); }
+    50% { box-shadow: 0 4px 28px rgba(96, 165, 250, 0.45); }
   }
 
-  /* ── TABS ── */
+  header h1 {
+    font-size: 1.35rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-bright) 0%, var(--purple) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    font-size: 0.78rem;
+    color: var(--muted-light);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  .header-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .badge-security {
+    background: rgba(96, 165, 250, 0.12);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    color: var(--accent-bright);
+  }
+  .badge-hmac {
+    background: rgba(167, 139, 250, 0.12);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+    color: var(--purple);
+  }
+  .badge-feature {
+    background: rgba(52, 211, 153, 0.12);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    color: var(--accent2);
+  }
+  .badge-version {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.2));
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+  }
+
+  /* ── NAVIGATION TABS ── */
   .tabs {
     display: flex;
-    gap: 0;
+    gap: 0.5rem;
+    padding: 0.8rem 2rem;
+    background: rgba(10, 15, 26, 0.8);
     border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    padding: 0 2rem;
+    position: relative;
+    z-index: 5;
     overflow-x: auto;
   }
   .tab {
-    padding: 1rem 1.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
     cursor: pointer;
-    color: var(--muted);
+    font-size: 0.84rem;
     font-weight: 600;
-    font-size: 0.9rem;
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
-    transition: all .2s;
+    color: var(--muted);
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
+    user-select: none;
+    white-space: nowrap;
+    border: 1px solid transparent;
   }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .tab:hover:not(.active) { color: var(--text); }
+  .tab:hover {
+    color: var(--text);
+    background: rgba(255,255,255,0.03);
+  }
+  .tab.active {
+    background: var(--surface);
+    color: var(--accent-bright);
+    border-color: var(--border-glow);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
 
-  /* ── MAIN ── */
-  main { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+  /* ── MAIN LAYOUT ── */
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.8rem 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
   .panel { display: none; }
-  .panel.active { display: block; }
+  .panel.active { display: block; animation: fadeIn 0.25s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
   /* ── CARDS ── */
   .card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.5rem;
+    border-radius: 14px;
+    padding: 1.6rem;
     margin-bottom: 1.5rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    transition: border-color 0.2s;
   }
+  .card:hover { border-color: var(--border-glow); }
   .card h2 {
-    font-size: 1rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-bright);
     margin-bottom: 1rem;
-    color: var(--accent);
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
+  /* ── SECURITY BANNER ── */
+  .security-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.9rem 1.1rem;
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.08) 0%, rgba(124, 58, 237, 0.05) 100%);
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    border-radius: 10px;
+    margin-bottom: 1.4rem;
+    font-size: 0.82rem;
+  }
+  .security-banner .shield { font-size: 1.6rem; }
+  .security-banner .details {
+    color: var(--muted-light);
+    font-size: 0.74rem;
+    margin-top: 3px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
   /* ── FORM ELEMENTS ── */
-  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
-  input[type=file], textarea, input[type=text] {
+  .form-group { margin-bottom: 1.3rem; }
+  label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 0.5rem;
+  }
+  .label-sub {
+    font-size: 0.72rem;
+    color: var(--muted-light);
+    font-weight: 400;
+  }
+  textarea, input[type="text"], input[type="password"], select {
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    padding: 0.7rem 1rem;
-    font-size: 0.9rem;
-    transition: border .2s;
-    outline: none;
-  }
-  input[type=file]:focus, textarea:focus, input[type=text]:focus {
-    border-color: var(--accent);
-  }
-  textarea { resize: vertical; min-height: 100px; font-family: inherit; }
-
-  .form-group { margin-bottom: 1.2rem; }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0.65rem 1.4rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 600;
-    transition: all .2s;
-  }
-  .btn-primary { background: #1f6feb; color: #fff; }
-  .btn-primary:hover { background: #388bfd; }
-  .btn-success { background: #238636; color: #fff; }
-  .btn-success:hover { background: #2ea043; }
-  .btn-warn { background: #9e6a03; color: #fff; }
-  .btn-warn:hover { background: #d29922; }
-  .btn-danger { background: #b62324; color: #fff; }
-  .btn-danger:hover { background: #f85149; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* ── UPLOAD ZONE ── */
-  .upload-zone {
-    border: 2px dashed var(--border);
     border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all .2s;
-    background: var(--surface);
+    color: var(--text);
+    padding: 0.75rem 1rem;
+    font-size: 0.88rem;
+    font-family: inherit;
+    transition: all 0.2s;
   }
-  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: #1f6feb11; }
-  .upload-zone .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
-  .upload-zone p { color: var(--muted); font-size: 0.85rem; }
-  .upload-zone input { display: none; }
+  textarea:focus, input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+  }
+  textarea { min-height: 105px; resize: vertical; line-height: 1.5; }
 
-  /* ── IMAGE COMPARE ── */
-  .img-row {
+  /* ── PILL SELECTOR (TEXT VS IMAGE) ── */
+  .pill-group {
+    display: inline-flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 4px;
+    margin-bottom: 1.2rem;
+  }
+  .pill-btn {
+    padding: 0.55rem 1.1rem;
+    border-radius: 7px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pill-btn.active {
+    background: linear-gradient(135deg, var(--accent) 0%, #3b82f6 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+  }
+
+  /* ── ADVANCED SETTINGS ACCORDION ── */
+  .adv-settings {
+    background: rgba(17, 24, 39, 0.7);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem;
+    margin-bottom: 1.4rem;
+  }
+  .adv-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 0.9rem;
+  }
+  .settings-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1rem;
   }
-  @media(max-width:600px) { .img-row { grid-template-columns: 1fr; } }
-  .img-box { text-align: center; }
-  .img-box p { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
-  .img-box img {
+
+  /* ── CHIP SELECTORS ── */
+  .chip-options {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .chip {
+    padding: 0.45rem 0.8rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted-light);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .chip.active {
+    background: rgba(96, 165, 250, 0.15);
+    border-color: var(--accent);
+    color: var(--accent-bright);
+    font-weight: 700;
+  }
+
+  /* ── CAPACITY GAUGE ── */
+  .capacity-container {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.6rem;
+  }
+  .capacity-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .capacity-bar-track {
+    width: 100%;
+    height: 7px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .capacity-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+
+  /* ── PASSWORD GROUP ── */
+  .password-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .password-group input { padding-right: 75px; }
+  .password-toggle {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+  .password-toggle:hover { color: var(--accent); }
+
+  .pw-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+  }
+  .btn-gen-pw {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--purple);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-gen-pw:hover {
+    border-color: var(--purple);
+    background: rgba(167, 139, 250, 0.1);
+  }
+
+  .strength-bar-container {
+    height: 4px;
+    background: var(--surface);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .strength-bar { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; }
+  .strength-label { font-size: 0.74rem; font-weight: 600; margin-top: 3px; }
+
+  /* ── FILE INPUT ── */
+  .file-input-styled {
+    display: block;
+    width: 100%;
+    padding: 0.9rem 1rem;
+    background: var(--surface);
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: center;
+    font-weight: 500;
+  }
+  .file-input-styled:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(96, 165, 250, 0.04);
+  }
+  .file-input-styled.has-file {
+    border-color: var(--accent2);
+    border-style: solid;
+    color: var(--accent2);
+    background: rgba(52, 211, 153, 0.04);
+  }
+
+  .preview-container {
+    display: none;
+    text-align: center;
+    margin-top: 10px;
+    padding: 12px;
+    background: rgba(96, 165, 250, 0.03);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .preview-container.show { display: block; }
+  .preview-container img {
+    max-height: 180px;
     max-width: 100%;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: #000;
+  }
+  .preview-name {
+    font-size: 0.78rem;
+    color: var(--accent2);
+    margin-top: 6px;
+    font-weight: 600;
   }
 
-  /* ── METRICS ── */
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0.75rem 1.6rem;
+    border-radius: 9px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.5);
+  }
+  .btn-success {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  }
+  .btn-success:hover {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5);
+  }
+  .btn-danger {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+  }
+  .btn-copy {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--accent-bright);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+  }
+  .btn-copy:hover { border-color: var(--accent); background: rgba(96, 165, 250, 0.1); }
+
+  /* ── DOWNLOAD GLOW BUTTON ── */
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.35), 0 0 60px rgba(52, 211, 153, 0.1);
+    transition: all 0.3s ease;
+    animation: downloadPulse 2s ease-in-out infinite;
+  }
+  .btn-download:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 8px 35px rgba(16, 185, 129, 0.45);
+  }
+  @keyframes downloadPulse {
+    0%, 100% { box-shadow: 0 6px 25px rgba(16, 185, 129, 0.35); }
+    50% { box-shadow: 0 6px 32px rgba(16, 185, 129, 0.55); }
+  }
+
+  /* ── IMAGE COMPARISON ROW (3-WAY) ── */
+  .img-row-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  .img-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem;
+    text-align: center;
+  }
+  .img-box p {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--muted-light);
+    margin-bottom: 0.6rem;
+  }
+  .img-box img {
+    max-height: 180px;
+    max-width: 100%;
+    border-radius: 6px;
+    object-fit: contain;
+    border: 1px solid var(--border);
+  }
+
+  /* ── METRICS GRID ── */
   .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
   }
   .metric-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1rem;
+    border-radius: 10px;
+    padding: 0.85rem;
     text-align: center;
   }
-  .metric-card .value { font-size: 1.6rem; font-weight: 700; color: var(--accent2); }
-  .metric-card .label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
-
-  /* ── RISK BADGE ── */
-  .risk-badge {
-    padding: 0.8rem 1.2rem;
-    border-radius: 8px;
+  .metric-card .value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-bright);
+  }
+  .metric-card .label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     font-weight: 700;
-    font-size: 1rem;
-    text-align: center;
-    margin-bottom: 1rem;
+    margin-top: 4px;
   }
-  .risk-high   { background: #f8514922; border: 1px solid #f85149; color: #f85149; }
-  .risk-medium { background: #f0883e22; border: 1px solid #f0883e; color: #f0883e; }
-  .risk-low    { background: #3fb95022; border: 1px solid #3fb950; color: #3fb950; }
 
-  /* ── EXTRACTED MSG ── */
+  /* ── SECURITY STACK CARDS ── */
+  .security-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 0.7rem;
+    margin-bottom: 1.5rem;
+  }
+  .sec-metric {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.7rem 0.9rem;
+    background: rgba(96, 165, 250, 0.04);
+    border: 1px solid rgba(96, 165, 250, 0.15);
+    border-radius: 8px;
+  }
+  .sec-metric .icon { font-size: 1.25rem; }
+  .sec-metric .name { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
+  .sec-metric .val  { font-size: 0.8rem; color: var(--text-bright); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── RESULT BOXES ── */
   .msg-box {
-    background: #0d1117;
-    border: 1px solid var(--accent2);
-    border-radius: 6px;
-    padding: 1rem;
-    font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
-    color: var(--accent2);
-    word-break: break-all;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    word-break: break-word;
     white-space: pre-wrap;
+    max-height: 250px;
+    overflow-y: auto;
   }
 
-  /* ── LOADER ── */
-  .loader { display: none; align-items: center; gap: 10px; color: var(--muted); font-size: 0.85rem; }
+  .security-note {
+    font-size: 0.8rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-top: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .security-note.secure {
+    background: rgba(52, 211, 153, 0.08);
+    color: var(--accent2-bright);
+    border: 1px solid rgba(52, 211, 153, 0.25);
+  }
+  .security-note.tamper {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+  }
+  .security-note.legacy {
+    background: rgba(251, 191, 36, 0.08);
+    color: var(--warn);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+  }
+
+  /* ── LOADER & ALERTS ── */
+  .loader {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted-light);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
   .loader.show { display: flex; }
   .spinner {
     width: 20px; height: 20px;
-    border: 3px solid var(--border);
+    border: 2.5px solid var(--border);
     border-top-color: var(--accent);
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    animation: spin 0.7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── ALERT ── */
   .alert {
-    padding: 0.8rem 1rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
     margin-top: 1rem;
     display: none;
+    font-weight: 600;
   }
   .alert.show { display: block; }
-  .alert-error { background: #f8514922; border: 1px solid #f85149; color: #f85149; }
-  .alert-info  { background: #58a6ff22; border: 1px solid #58a6ff; color: #58a6ff; }
+  .alert-error { background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.25); color: var(--danger); }
 
-  /* ── STAT TABLE ── */
-  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
+  /* ── TABLES ── */
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.5rem; }
   th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
-  th { color: var(--muted); font-weight: 600; }
+  th { color: var(--muted); font-weight: 700; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; }
   td { color: var(--text); }
   .val-good { color: var(--accent2); font-weight: 700; }
   .val-warn { color: var(--warn); font-weight: 700; }
   .val-bad  { color: var(--danger); font-weight: 700; }
 
-  /* ── HOW IT WORKS ── */
+  /* ── RISK BADGE ── */
+  .risk-badge {
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    margin-bottom: 1.2rem;
+  }
+  .risk-low { background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.4); color: var(--accent2); }
+  .risk-medium { background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.4); color: var(--warn); }
+  .risk-high { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: var(--danger); }
+
+  /* ── THEORY CARDS ── */
   .steps {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
   }
   .step {
-    background: var(--surface);
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1rem;
+    border-radius: 10px;
+    padding: 1.2rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .step:hover {
+    border-color: var(--border-glow);
+    transform: translateY(-2px);
   }
   .step .num {
-    font-size: 1.5rem;
+    font-size: 2rem;
     font-weight: 900;
-    color: #1f6feb44;
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(124, 58, 237, 0.15));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     line-height: 1;
     margin-bottom: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
   }
-  .step h3 { font-size: 0.9rem; color: var(--accent); margin-bottom: 0.3rem; }
-  .step p  { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+  .step h3 { font-size: 0.88rem; color: var(--accent-bright); margin-bottom: 0.4rem; font-weight: 700; }
+  .step p  { font-size: 0.78rem; color: var(--muted-light); line-height: 1.6; }
 
-  /* ── DOWNLOAD BTN ── */
-  #downloadBtn { display: none; }
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    header { padding: 1rem; }
+    .tabs { padding: 0.5rem 1rem; }
+    main { padding: 1rem; }
+    .header-badges { display: none; }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">🔐</div>
-  <div>
-    <h1>Pixels with Purpose</h1>
+  <div class="logo-group">
+    <div class="logo">🔐</div>
+    <div>
+      <h1>Pixels with Purpose</h1>
+      <div class="subtitle">Advanced Multi-Channel Steganography, Image-in-Image Hiding &amp; Forensics</div>
+    </div>
+  </div>
+  <div class="header-badges">
+    <span class="badge badge-security">🛡️ AES-256-CBC</span>
+    <span class="badge badge-hmac">🔐 HMAC-SHA256</span>
+    <span class="badge badge-feature">🖼️ Image-in-Image</span>
+    <span class="badge badge-feature">⚡ 1/2-Bit LSB</span>
+    <span class="badge badge-version">v2.5 Pro</span>
   </div>
 </header>
 
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('embed')">🔒 Embed Message</div>
-  <div class="tab" onclick="switchTab('extract')">🔓 Extract Message</div>
-  <div class="tab" onclick="switchTab('analyze')">🔍 Steganalysis</div>
-  <div class="tab" onclick="switchTab('theory')">📖 How It Works</div>
+  <div class="tab active" onclick="switchTab('embed')"><span class="tab-icon">🔒</span> Embed</div>
+  <div class="tab" onclick="switchTab('extract')"><span class="tab-icon">🔓</span> Extract</div>
+  <div class="tab" onclick="switchTab('analyze')"><span class="tab-icon">🔍</span> Steganalysis</div>
+  <div class="tab" onclick="switchTab('theory')"><span class="tab-icon">📖</span> Architecture &amp; Theory</div>
 </div>
 
 <main>
@@ -292,37 +801,174 @@
   ══════════════════════════════════════════ -->
   <div class="panel active" id="panel-embed">
     <div class="card">
-      <h2>🔒 Hide Secret Message in Image</h2>
+      <h2><span class="icon-tag">🔒</span> Embed Secret Data in Cover Image</h2>
 
-      <div class="form-group">
-        <label>1. Upload Cover Image (PNG / JPG / BMP)</label>
-        <input type="file" id="embedFile" accept="image/*" onchange="previewEmbed(this)"
-          style="display:block;width:100%;background:var(--surface);border:2px solid var(--accent);border-radius:6px;color:var(--text);padding:0.7rem 1rem;font-size:0.9rem;cursor:pointer;"/>
-        <div id="embedPreview" style="display:none;text-align:center;margin-top:10px;">
-          <img id="embedPreviewImg" style="max-height:180px;border-radius:8px;border:1px solid var(--border);"/>
-          <p id="embedPreviewName" style="font-size:0.8rem;color:var(--accent2);margin-top:6px;"></p>
+      <div class="security-banner">
+        <span class="shield">🛡️</span>
+        <div>
+          <strong>Tier 2 Authenticated Steganography Pipeline Active</strong> — Data is compressed with zlib level 9, encrypted with AES-256-CBC, authenticated with HMAC-SHA256 (Encrypt-then-MAC), and scattered pseudo-randomly across pixel channels.
+          <div class="details">PBKDF2-HMAC-SHA256 (100K iter) · Seeded Non-sequential PRNG · HVS Stealth Channels</div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label>2. Secret Message to Hide</label>
-        <textarea id="secretMsg" placeholder="Type your secret message here...&#10;&#10;Example: Meeting at 10am. Bring the documents."></textarea>
-        <p style="font-size:0.75rem; color:var(--muted); margin-top:6px;" id="charCount">0 characters</p>
+      <!-- PAYLOAD TYPE TOGGLE -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+          <label style="margin-bottom:6px;">Payload Mode</label>
+          <div class="pill-group">
+            <button type="button" class="pill-btn active" id="btnModeText" onclick="setPayloadMode('text')">
+              📝 Secret Text Message
+            </button>
+            <button type="button" class="pill-btn" id="btnModeImage" onclick="setPayloadMode('image')">
+              🖼️ Secret Image (Image-in-Image)
+            </button>
+          </div>
+        </div>
+
+        <div style="text-align:right;">
+          <label style="margin-bottom:6px;">Cover Image Status</label>
+          <span id="coverInfoBadge" style="font-size:0.75rem; color:var(--muted-light); font-family:'JetBrains Mono';">No cover loaded</span>
+        </div>
       </div>
 
+      <!-- 1. COVER IMAGE -->
+      <div class="form-group">
+        <label>
+          <span>1 · Cover Image (Carrier)</span>
+          <span class="label-sub">PNG / JPG / BMP</span>
+        </label>
+        <input type="file" id="embedFile" accept="image/*" onchange="previewCoverImage(this)" style="display:none;"/>
+        <div class="file-input-styled" id="embedFileLabel" onclick="document.getElementById('embedFile').click()">
+          📁 Click to select cover image or drag &amp; drop
+        </div>
+        <div class="preview-container" id="embedPreview">
+          <img id="embedPreviewImg" alt="Cover Preview"/>
+          <p class="preview-name" id="embedPreviewName"></p>
+        </div>
+      </div>
+
+      <!-- 2. SECRET PAYLOAD -->
+      <div class="form-group" id="groupSecretText">
+        <label>
+          <span>2 · Secret Text Message</span>
+          <span class="label-sub" id="charCount">0 characters</span>
+        </label>
+        <textarea id="secretMsg" placeholder="Type your confidential secret message here…&#10;&#10;It will be compressed, AES-256 encrypted, and scattered across the image."></textarea>
+      </div>
+
+      <div class="form-group" id="groupSecretImage" style="display:none;">
+        <label>
+          <span>2 · Secret Image to Hide Inside Cover Image</span>
+          <span class="label-sub">PNG / JPG / WEBP</span>
+        </label>
+        <input type="file" id="secretImgFile" accept="image/*" onchange="previewSecretImage(this)" style="display:none;"/>
+        <div class="file-input-styled" id="secretImgFileLabel" onclick="document.getElementById('secretImgFile').click()">
+          🖼️ Click to select secret image to hide
+        </div>
+        <div class="preview-container" id="secretImgPreview">
+          <img id="secretImgPreviewImg" alt="Secret Image Preview"/>
+          <p class="preview-name" id="secretImgPreviewName"></p>
+        </div>
+      </div>
+
+      <!-- TIER 2 ADVANCED STEGANOGRAPHY SETTINGS -->
+      <div class="adv-settings">
+        <div class="adv-title">⚙️ Tier 2 Advanced Embedding Controls</div>
+        <div class="settings-grid">
+          
+          <!-- LSB DEPTH -->
+          <div>
+            <label>
+              <span>LSB Bit Depth</span>
+              <span class="label-sub" id="lsbDepthDesc">1-Bit (Ultra Stealth)</span>
+            </label>
+            <div class="chip-options" id="lsbDepthChips">
+              <div class="chip active" onclick="setLsbDepth(1)">1-Bit LSB (&gt;52 dB PSNR)</div>
+              <div class="chip" onclick="setLsbDepth(2)">2-Bit LSB (2x Double Capacity)</div>
+            </div>
+          </div>
+
+          <!-- CHANNEL SELECTION -->
+          <div>
+            <label>
+              <span>Channel Embedding Mode</span>
+              <span class="label-sub" id="channelModeDesc">All RGB Channels</span>
+            </label>
+            <div class="chip-options" id="channelChips">
+              <div class="chip active" onclick="setChannelMode(0, 'All RGB Channels')">🌈 RGB (All)</div>
+              <div class="chip" onclick="setChannelMode(3, 'Blue Channel (HVS Stealth)')">🔵 Blue (Stealth HVS)</div>
+              <div class="chip" onclick="setChannelMode(4, 'Adaptive PRNG')">🔀 Adaptive PRNG</div>
+              <div class="chip" onclick="setChannelMode(1, 'Red Channel')">🔴 Red</div>
+              <div class="chip" onclick="setChannelMode(2, 'Green Channel')">🟢 Green</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- REAL-TIME CAPACITY METER -->
+        <div class="capacity-container">
+          <div class="capacity-header">
+            <span>📊 Dynamic Capacity Allocation:</span>
+            <span id="capacityStatsText" style="color:var(--accent-bright); font-family:'JetBrains Mono';">Upload cover to calculate</span>
+          </div>
+          <div class="capacity-bar-track">
+            <div class="capacity-bar-fill" id="capacityBarFill"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. ENCRYPTION PASSWORD -->
+      <div class="form-group">
+        <label>
+          <span>3 · Encryption Password &amp; Seed <span style="color:var(--danger)">*</span></span>
+          <span class="label-sub">Used for PBKDF2 key derivation and PRNG scatter sequence</span>
+        </label>
+        <div class="password-group">
+          <input type="password" id="embedPassword" placeholder="Enter a strong pass-phrase…" autocomplete="off"/>
+          <button class="password-toggle" type="button" onclick="togglePassword('embedPassword', this)">SHOW</button>
+        </div>
+        <div class="pw-actions">
+          <div style="flex:1; margin-right:1rem;">
+            <div class="strength-bar-container">
+              <div class="strength-bar" id="embedStrengthBar"></div>
+            </div>
+            <p class="strength-label" id="embedStrengthLabel" style="color:var(--muted)">&nbsp;</p>
+          </div>
+          <button type="button" class="btn-gen-pw" onclick="generateStrongPassword()">⚡ Generate Strong Password</button>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
       <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center;">
-        <button class="btn btn-primary" onclick="embedMessage()">🔒 Embed & Generate Stego Image</button>
-        <button class="btn btn-success" id="downloadBtn" onclick="downloadStego()">⬇️ Download Stego Image</button>
-        <div class="loader" id="embedLoader"><div class="spinner"></div> Processing image...</div>
+        <button class="btn btn-primary" onclick="embedData()">🔒 Encrypt &amp; Embed Data</button>
+        <div class="loader" id="embedLoader"><div class="spinner"></div> Encrypting, compressing &amp; scattering bits…</div>
       </div>
 
       <div class="alert alert-error" id="embedError"></div>
     </div>
 
+    <!-- EMBED RESULTS CARD -->
     <div class="card" id="embedResult" style="display:none;">
-      <h2>📊 Embedding Results</h2>
-      <div class="img-row" id="embedImages"></div>
+      <h2><span class="icon-tag">📊</span> Embedding &amp; Forensic Quality Results</h2>
+      
+      <!-- 3-WAY IMAGE COMPARISON -->
+      <div class="img-row-3" id="embedImages"></div>
+
+      <!-- FORENSIC METRICS GRID -->
       <div class="metrics-grid" id="embedMetrics"></div>
+
+      <!-- SECURITY BADGES STACK -->
+      <div class="security-metrics" id="embedSecurityMetrics"></div>
+
+      <!-- BIG DOWNLOAD BUTTON -->
+      <div style="text-align:center; margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--border);">
+        <button class="btn btn-download" id="downloadBtnResult" onclick="downloadStego()">
+          ⬇️ Download Stego Image (PNG)
+        </button>
+        <p style="font-size:0.75rem; color:var(--muted-light); margin-top:10px;">
+          💡 Always save and distribute the image in <strong>lossless PNG format</strong> to preserve bit-level stego payload integrity.
+        </p>
+      </div>
     </div>
   </div>
 
@@ -331,28 +977,69 @@
   ══════════════════════════════════════════ -->
   <div class="panel" id="panel-extract">
     <div class="card">
-      <h2>🔓 Extract Hidden Message from Stego Image</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:1.2rem;">
-        Upload a stego image created by this tool. The system will read the LSBs and reconstruct the hidden message.
+      <h2><span class="icon-tag">🔓</span> Extract &amp; Decrypt Hidden Payload</h2>
+      <p style="color:var(--muted-light); font-size:0.82rem; margin-bottom:1.2rem;">
+        Upload a stego image and enter the encryption password. The system automatically detects whether the payload is a <strong>secret text message</strong> or an <strong>embedded secret image</strong>, verifies cryptographic integrity via HMAC-SHA256, and decrypts the payload.
       </p>
 
       <div class="form-group">
-        <label>Upload Stego Image</label>
-        <input type="file" id="extractFile" accept="image/*"
-          style="display:block;width:100%;background:var(--surface);border:2px solid var(--accent2);border-radius:6px;color:var(--text);padding:0.7rem 1rem;font-size:0.9rem;cursor:pointer;"/>
+        <label>Stego Image</label>
+        <input type="file" id="extractFile" accept="image/*" onchange="previewExtractImage(this)" style="display:none;"/>
+        <div class="file-input-styled" id="extractFileLabel" onclick="document.getElementById('extractFile').click()">
+          📁 Click to select stego image
+        </div>
+        <div class="preview-container" id="extractPreview">
+          <img id="extractPreviewImg" alt="Stego Preview"/>
+          <p class="preview-name" id="extractPreviewName"></p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Decryption Password <span style="color:var(--danger)">*</span></label>
+        <div class="password-group">
+          <input type="password" id="extractPassword" placeholder="Enter password used during embedding…" autocomplete="off"/>
+          <button class="password-toggle" type="button" onclick="togglePassword('extractPassword', this)">SHOW</button>
+        </div>
       </div>
 
       <div style="display:flex; gap:1rem; align-items:center;">
-        <button class="btn btn-success" onclick="extractMessage()">🔓 Extract Message</button>
-        <div class="loader" id="extractLoader"><div class="spinner"></div> Extracting...</div>
+        <button class="btn btn-success" onclick="extractData()">🔓 Authenticate &amp; Decrypt</button>
+        <div class="loader" id="extractLoader"><div class="spinner"></div> Reconstructing scatter sequence &amp; decrypting…</div>
       </div>
       <div class="alert alert-error" id="extractError"></div>
     </div>
 
+    <!-- EXTRACT RESULT CARD -->
     <div class="card" id="extractResult" style="display:none;">
-      <h2>✉️ Extracted Message</h2>
-      <div class="msg-box" id="extractedMsg"></div>
-      <p style="font-size:0.8rem; color:var(--muted); margin-top:0.5rem;" id="extractMeta"></p>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
+        <h2 style="margin:0;"><span class="icon-tag">✉️</span> Recovered Secret Payload</h2>
+        <div id="extractBadges" style="display:flex; gap:6px;"></div>
+      </div>
+
+      <!-- TEXT RESULT -->
+      <div id="extractTextResult" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; font-weight:700;">Decrypted Text:</span>
+          <button class="btn btn-copy" onclick="copyExtractedText()">📋 Copy Message</button>
+        </div>
+        <div class="msg-box" id="extractedMsg"></div>
+      </div>
+
+      <!-- IMAGE RESULT (IMAGE-IN-IMAGE) -->
+      <div id="extractImageResult" style="display:none; text-align:center;">
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.2rem; display:inline-block; max-width:100%;">
+          <p style="font-size:0.8rem; font-weight:700; color:var(--accent2); margin-bottom:10px;">🖼️ Recovered Secret Image</p>
+          <img id="extractedSecretImg" style="max-height:300px; max-width:100%; border-radius:8px; border:1px solid var(--border);" alt="Recovered Secret"/>
+          <div id="extractedImgMeta" style="font-size:0.75rem; color:var(--muted-light); margin-top:8px; font-family:'JetBrains Mono';"></div>
+          <button class="btn btn-success" style="margin-top:12px;" onclick="downloadExtractedSecretImage()">
+            ⬇️ Download Recovered Secret Image
+          </button>
+        </div>
+      </div>
+
+      <!-- INTEGRITY & METADATA -->
+      <div id="extractSecurityNote"></div>
+      <p style="font-size:0.78rem; color:var(--muted); margin-top:0.7rem;" id="extractMeta"></p>
     </div>
   </div>
 
@@ -361,216 +1048,483 @@
   ══════════════════════════════════════════ -->
   <div class="panel" id="panel-analyze">
     <div class="card">
-      <h2>🔍 Steganalysis Tool</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:1.2rem;">
-        Upload any image to run a full forensic steganalysis. Uses <strong>Chi-Square attack</strong> and LSB distribution analysis to detect hidden data.
+      <h2><span class="icon-tag">🔍</span> Steganalysis — Forensic Image Inspection</h2>
+      <p style="color:var(--muted-light); font-size:0.82rem; margin-bottom:1.2rem;">
+        Upload any suspect image to run forensic steganalysis: <strong>Chi-Square test (Pairs of Values)</strong>, LSB distribution statistics, and <strong>Per-Channel (Red, Green, Blue) forensic breakdowns</strong>.
+        <br/><span style="color:var(--accent2); font-size:0.75rem;">💡 Tier 2 non-sequential scattering &amp; Blue-channel stealth are engineered to bypass these forensic attacks.</span>
       </p>
 
       <div class="form-group">
-        <label>Upload Image to Analyze</label>
-        <input type="file" id="analyzeFile" accept="image/*"
-          style="display:block;width:100%;background:var(--surface);border:2px solid var(--danger);border-radius:6px;color:var(--text);padding:0.7rem 1rem;font-size:0.9rem;cursor:pointer;"/>
+        <label>Image to Steganalyze</label>
+        <input type="file" id="analyzeFile" accept="image/*" onchange="previewAnalyzeImage(this)" style="display:none;"/>
+        <div class="file-input-styled" id="analyzeFileLabel" onclick="document.getElementById('analyzeFile').click()" style="border-color: rgba(248, 113, 113, 0.35);">
+          🔬 Click to select image for forensic analysis
+        </div>
+        <div class="preview-container" id="analyzePreview">
+          <img id="analyzePreviewImg" alt="Analyze Preview"/>
+          <p class="preview-name" id="analyzePreviewName"></p>
+        </div>
       </div>
 
       <div style="display:flex; gap:1rem; align-items:center;">
-        <button class="btn btn-danger" onclick="runAnalysis()">🔬 Run Steganalysis</button>
-        <div class="loader" id="analyzeLoader"><div class="spinner"></div> Analyzing...</div>
+        <button class="btn btn-danger" onclick="runAnalysis()">🔬 Run Forensic Steganalysis</button>
+        <div class="loader" id="analyzeLoader"><div class="spinner"></div> Performing chi-square test &amp; channel inspection…</div>
       </div>
       <div class="alert alert-error" id="analyzeError"></div>
     </div>
 
+    <!-- ANALYSIS REPORT CARD -->
     <div class="card" id="analyzeResult" style="display:none;">
-      <h2>🧾 Analysis Report</h2>
+      <h2><span class="icon-tag">🧾</span> Forensic Steganalysis Report</h2>
 
       <div class="risk-badge" id="riskBadge"></div>
 
-      <div class="img-row" style="margin-bottom:1.5rem;">
+      <div class="img-row-3" style="margin-bottom:1.5rem;">
         <div class="img-box">
-          <p>📷 Original Image</p>
+          <p>📷 Original Suspect Image</p>
           <img id="analyzeOrigImg" src="" alt="Original"/>
         </div>
         <div class="img-box">
-          <p>🔵 LSB Plane (Visualized)</p>
+          <p>🔵 LSB Noise Plane (Amplified)</p>
           <img id="analyzeLsbImg" src="" alt="LSB Plane"/>
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; flex-wrap:wrap;">
+      <div id="secureWarning" style="margin-bottom: 1rem;">
+        <div class="security-note secure">
+          🛡️ Forensic Notice: Tier 2 steganography employs PRNG pseudo-random bit scattering and AES-256 entropy flattening, defeating sequential chi-square detection.
+        </div>
+      </div>
+
+      <!-- OVERALL STATS -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
         <div>
-          <h3 style="font-size:0.85rem; color:var(--muted); margin-bottom:0.5rem;">📊 Chi-Square Test</h3>
+          <div class="adv-title" style="font-size:0.8rem;">📊 Combined Chi-Square Test</div>
           <table id="chiTable"></table>
         </div>
         <div>
-          <h3 style="font-size:0.85rem; color:var(--muted); margin-bottom:0.5rem;">📈 LSB Distribution</h3>
+          <div class="adv-title" style="font-size:0.8rem;">📈 LSB Plane Distribution</div>
           <table id="lsbTable"></table>
         </div>
       </div>
 
+      <!-- PER-CHANNEL FORENSIC BREAKDOWN (TIER 2 FEATURE) -->
+      <div style="margin-bottom:1.5rem;">
+        <div class="adv-title" style="font-size:0.85rem; color:var(--purple);">🔬 Per-Channel Forensic Breakdown (R, G, B)</div>
+        <table id="channelAnalysisTable"></table>
+      </div>
+
       <div id="foundMsgSection" style="display:none; margin-top:1.5rem;">
-        <h3 style="font-size:0.85rem; color:var(--accent2); margin-bottom:0.5rem;">✉️ Message Recovered from LSBs</h3>
+        <div class="adv-title" style="color:var(--warn);">✉️ Plaintext Delimiter Detected (Legacy Steganography)</div>
         <div class="msg-box" id="analyzeMsg"></div>
+        <div class="security-note legacy" style="margin-top:8px;">
+          ⚠️ This payload was recovered via raw sequential LSB reading without encryption.
+        </div>
       </div>
 
       <div>
-        <h3 style="font-size:0.85rem; color:var(--muted); margin-bottom:0.5rem; margin-top:1.2rem;">🖼️ Image Information</h3>
+        <div class="adv-title" style="margin-top:1.2rem; font-size:0.8rem;">🖼️ Image File Metadata</div>
         <table id="imgInfoTable"></table>
       </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════
-       PANEL 4 — THEORY
+       PANEL 4 — ARCHITECTURE & THEORY
   ══════════════════════════════════════════ -->
   <div class="panel" id="panel-theory">
     <div class="card">
-      <h2>🔒 Steganography — How It Works (LSB Method)</h2>
+      <h2><span class="icon-tag">📐</span> Tier 2 Architecture &amp; Security Pipeline</h2>
       <div class="steps">
         <div class="step">
           <div class="num">01</div>
-          <h3>Cover Image</h3>
-          <p>Select any digital image (PNG/JPG) as the carrier. More pixels = more hiding capacity.</p>
+          <h3>Payload Preprocessing</h3>
+          <p>Text messages or secret image binary bytes are compressed using zlib (level 9), reducing payload size and removing repetitive entropy patterns.</p>
         </div>
         <div class="step">
           <div class="num">02</div>
-          <h3>Text → Binary</h3>
-          <p>Each character is converted to its 8-bit ASCII binary. E.g. 'A' = <code>01000001</code></p>
+          <h3>AES-256-CBC Encryption</h3>
+          <p>PBKDF2-HMAC-SHA256 derives a 256-bit encryption key with 100,000 iterations and a cryptographically secure 16-byte random salt and IV.</p>
         </div>
         <div class="step">
           <div class="num">03</div>
-          <h3>LSB Replacement</h3>
-          <p>The least significant bit of each pixel's R/G/B channel is replaced with one bit of the secret.</p>
+          <h3>HMAC-SHA256 Integrity</h3>
+          <p>Encrypt-then-MAC authentication tag verifies zero tampering or bit alteration. If even 1 pixel is corrupted, the tamper alarm triggers.</p>
         </div>
         <div class="step">
           <div class="num">04</div>
-          <h3>Stego Image</h3>
-          <p>The result looks identical to the eye — each pixel changes by at most 1 (out of 255).</p>
+          <h3>PRNG Bit Dispersion</h3>
+          <p>Bits are scattered non-sequentially across selected channels (e.g. HVS Blue channel) using a seeded PRNG, bypassing chi-square steganalysis.</p>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <h2>🔍 Steganalysis — Chi-Square Attack</h2>
+      <h2><span class="icon-tag">👁️</span> Why Blue Channel &amp; HVS (Human Visual System)?</h2>
+      <p style="color:var(--muted-light); font-size:0.85rem; line-height:1.7; margin-bottom:1rem;">
+        The human retina contains approximately 64% red cones, 32% green cones, and only <strong>2% to 7% blue cones</strong>. As a result, the human visual system is least sensitive to high-frequency spatial luminance variations in the blue spectrum. Embedding payloads specifically into the blue channel achieves maximum stealth and visual imperceptibility.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>1-Bit LSB Mode</th><th>2-Bit LSB Mode</th><th>Multi-Channel Stealth</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Visual Quality</strong></td>
+            <td class="val-good">&gt; 52 dB PSNR (Near perfect)</td>
+            <td class="val-good">&gt; 44 dB PSNR (Imperceptible)</td>
+            <td class="val-good">Selective HVS Blue channel</td>
+          </tr>
+          <tr>
+            <td><strong>Payload Capacity</strong></td>
+            <td>1 bit per channel element</td>
+            <td class="val-good">2 bits per element (200% capacity)</td>
+            <td>Configurable (All, Red, Green, Blue, Adaptive)</td>
+          </tr>
+          <tr>
+            <td><strong>Steganalysis Evasion</strong></td>
+            <td class="val-good">Extremely High</td>
+            <td>High</td>
+            <td class="val-good">Bypasses PoV Chi-Square Attack</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon-tag">🔍</span> Steganalysis Principles (Chi-Square &amp; PoVs)</h2>
       <div class="steps">
         <div class="step">
           <div class="num">01</div>
-          <h3>Pair of Values</h3>
-          <p>Group pixel values into pairs (0,1), (2,3), (4,5)… LSB embedding makes even & odd pairs equal.</p>
+          <h3>Pairs of Values (PoVs)</h3>
+          <p>In natural images, adjacent even-odd pixel pairs (2k, 2k+1) have varying counts. Sequential LSB embedding tends to equalize these frequencies.</p>
         </div>
         <div class="step">
           <div class="num">02</div>
           <h3>Chi-Square Statistic</h3>
-          <p>χ² = Σ (Observed − Expected)² / Expected. High embedding = low χ², suspicious distribution.</p>
+          <p>$\chi^2 = \sum \frac{(Observed - Expected)^2}{Expected}$. Low $\chi^2$ indicates an artificial distribution caused by sequential embedding.</p>
         </div>
         <div class="step">
           <div class="num">03</div>
-          <h3>p-value</h3>
-          <p>p-value &lt; 0.05 → strong statistical evidence of hidden data (less than 5% chance it's natural).</p>
+          <h3>p-Value Threshold</h3>
+          <p>A $p$-value &lt; 0.05 indicates statistical confidence that hidden sequential bits exist in the image.</p>
         </div>
         <div class="step">
           <div class="num">04</div>
-          <h3>LSB Plane Visual</h3>
-          <p>Visualizing the LSB plane reveals noise-like randomness in stego images vs. natural images.</p>
+          <h3>Anti-Forensics Defense</h3>
+          <p>By scattering bits non-sequentially with AES pseudo-randomness, the global PoV balance is preserved and detection is evaded.</p>
         </div>
       </div>
-    </div>
-
-    <div class="card">
-      <h2>📐 Quality Metrics</h2>
-      <table>
-        <thead><tr><th>Metric</th><th>What it means</th><th>Good threshold</th></tr></thead>
-        <tbody>
-          <tr><td><strong>PSNR</strong></td><td>Peak Signal-to-Noise Ratio (dB). Higher = better quality.</td><td class="val-good">&gt; 40 dB</td></tr>
-          <tr><td><strong>MSE</strong></td><td>Mean Squared Error per pixel. Lower = less distortion.</td><td class="val-good">&lt; 1.0</td></tr>
-          <tr><td><strong>Capacity</strong></td><td>Max hidden data = Total pixels × 1 bit ÷ 8 bytes per char</td><td>—</td></tr>
-        </tbody>
-      </table>
     </div>
   </div>
 
 </main>
 
 <script>
-// ── STATE ──
+// ── GLOBAL STATE ──
 let stegoB64 = null;
+let extractedSecretImageB64 = null;
+let extractedSecretImageFormat = 'png';
+let currentPayloadMode = 'text'; // 'text' or 'image'
+let currentLsbDepth = 1;
+let currentChannelMode = 0; // 0=All, 1=Red, 2=Green, 3=Blue, 4=Adaptive
+let coverImageDimensions = null; // { width, height, total_elements }
 
 // ── TAB SWITCHING ──
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  event.target.classList.add('active');
+  event.currentTarget.classList.add('active');
   document.getElementById('panel-' + tab).classList.add('active');
 }
 
-// ── CHAR COUNT ──
-document.getElementById('secretMsg').addEventListener('input', function() {
-  document.getElementById('charCount').textContent = this.value.length + ' characters';
-});
+// ── PAYLOAD MODE SWITCHER (TEXT VS IMAGE) ──
+function setPayloadMode(mode) {
+  currentPayloadMode = mode;
+  document.getElementById('btnModeText').classList.toggle('active', mode === 'text');
+  document.getElementById('btnModeImage').classList.toggle('active', mode === 'image');
+  
+  if (mode === 'text') {
+    document.getElementById('groupSecretText').style.display = 'block';
+    document.getElementById('groupSecretImage').style.display = 'none';
+  } else {
+    document.getElementById('groupSecretText').style.display = 'none';
+    document.getElementById('groupSecretImage').style.display = 'block';
+  }
+  updateCapacityEstimator();
+}
 
-// ── PREVIEW EMBED IMAGE ──
-function previewEmbed(input) {
-  if (input.files && input.files[0]) {
-    document.getElementById('embedPreviewImg').src = URL.createObjectURL(input.files[0]);
-    document.getElementById('embedPreviewName').textContent = '✅ ' + input.files[0].name;
-    document.getElementById('embedPreview').style.display = 'block';
+// ── LSB DEPTH SELECTION ──
+function setLsbDepth(depth) {
+  currentLsbDepth = depth;
+  const chips = document.querySelectorAll('#lsbDepthChips .chip');
+  chips[0].classList.toggle('active', depth === 1);
+  chips[1].classList.toggle('active', depth === 2);
+  document.getElementById('lsbDepthDesc').textContent = depth === 1 ? '1-Bit (Ultra Stealth)' : '2-Bit (Double Capacity)';
+  updateCapacityEstimator();
+}
+
+// ── CHANNEL MODE SELECTION ──
+function setChannelMode(mode, label) {
+  currentChannelMode = mode;
+  const chips = document.querySelectorAll('#channelChips .chip');
+  chips.forEach((c, idx) => {
+    c.classList.toggle('active', idx === (mode === 0 ? 0 : mode === 3 ? 1 : mode === 4 ? 2 : mode === 1 ? 3 : 4));
+  });
+  document.getElementById('channelModeDesc').textContent = label;
+  updateCapacityEstimator();
+}
+
+// ── PASSWORD VISIBILITY TOGGLE ──
+function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = 'HIDE';
+  } else {
+    input.type = 'password';
+    btn.textContent = 'SHOW';
   }
 }
 
-// ── EMBED MESSAGE ──
-async function embedMessage() {
+// ── PASSWORD GENERATOR ──
+function generateStrongPassword() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~|}{[]';
+  let pwd = '';
+  const cryptoObj = window.crypto || window.msCrypto;
+  const randVals = new Uint8Array(16);
+  cryptoObj.getRandomValues(randVals);
+  for (let i = 0; i < 16; i++) {
+    pwd += chars[randVals[i] % chars.length];
+  }
+  const input = document.getElementById('embedPassword');
+  input.value = pwd;
+  input.dispatchEvent(new Event('input'));
+  navigator.clipboard.writeText(pwd).catch(() => {});
+  alert('⚡ Generated strong 16-character password and copied to clipboard:\n\n' + pwd);
+}
+
+// ── PASSWORD STRENGTH METER ──
+document.getElementById('embedPassword').addEventListener('input', function() {
+  const pw = this.value;
+  const bar = document.getElementById('embedStrengthBar');
+  const label = document.getElementById('embedStrengthLabel');
+
+  if (!pw) {
+    bar.style.width = '0%';
+    label.innerHTML = '&nbsp;';
+    return;
+  }
+
+  let score = 0;
+  if (pw.length >= 4) score++;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  const levels = [
+    { pct: '15%', color: '#ef4444', label: '🔴 Very Weak' },
+    { pct: '30%', color: '#f97316', label: '🟠 Weak' },
+    { pct: '50%', color: '#eab308', label: '🟡 Fair' },
+    { pct: '70%', color: '#22c55e', label: '🟢 Good' },
+    { pct: '85%', color: '#10b981', label: '🟢 Strong' },
+    { pct: '100%', color: '#06b6d4', label: '🔵 Maximum Entropy' }
+  ];
+
+  const level = levels[Math.min(score, levels.length - 1)];
+  bar.style.width = level.pct;
+  bar.style.background = `linear-gradient(90deg, ${level.color}, ${level.color}88)`;
+  label.textContent = level.label;
+  label.style.color = level.color;
+});
+
+// ── SECRET MSG CHAR COUNT & CAPACITY ──
+document.getElementById('secretMsg').addEventListener('input', function() {
+  document.getElementById('charCount').textContent = this.value.length + ' characters';
+  updateCapacityEstimator();
+});
+
+// ── PREVIEWS ──
+function previewCoverImage(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = function() {
+      coverImageDimensions = {
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+        total_elements: img.naturalWidth * img.naturalHeight * 3
+      };
+      document.getElementById('coverInfoBadge').textContent = `${img.naturalWidth} × ${img.naturalHeight} px (${(file.size/1024).toFixed(1)} KB)`;
+      updateCapacityEstimator();
+    };
+    img.src = url;
+
+    document.getElementById('embedPreviewImg').src = url;
+    document.getElementById('embedPreviewName').textContent = '✅ ' + file.name;
+    document.getElementById('embedPreview').classList.add('show');
+    const label = document.getElementById('embedFileLabel');
+    label.textContent = '✅ ' + file.name;
+    label.classList.add('has-file');
+  }
+}
+
+function previewSecretImage(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    document.getElementById('secretImgPreviewImg').src = URL.createObjectURL(file);
+    document.getElementById('secretImgPreviewName').textContent = `✅ ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+    document.getElementById('secretImgPreview').classList.add('show');
+    const label = document.getElementById('secretImgFileLabel');
+    label.textContent = '✅ ' + file.name;
+    label.classList.add('has-file');
+    updateCapacityEstimator();
+  }
+}
+
+function previewExtractImage(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    document.getElementById('extractPreviewImg').src = URL.createObjectURL(file);
+    document.getElementById('extractPreviewName').textContent = '✅ ' + file.name;
+    document.getElementById('extractPreview').classList.add('show');
+    const label = document.getElementById('extractFileLabel');
+    label.textContent = '✅ ' + file.name;
+    label.classList.add('has-file');
+  }
+}
+
+function previewAnalyzeImage(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    document.getElementById('analyzePreviewImg').src = URL.createObjectURL(file);
+    document.getElementById('analyzePreviewName').textContent = '✅ ' + file.name;
+    document.getElementById('analyzePreview').classList.add('show');
+    const label = document.getElementById('analyzeFileLabel');
+    label.textContent = '✅ ' + file.name;
+    label.classList.add('has-file');
+  }
+}
+
+// ── REAL-TIME CAPACITY CALCULATOR ──
+function updateCapacityEstimator() {
+  if (!coverImageDimensions) {
+    document.getElementById('capacityStatsText').textContent = 'Upload cover image to calculate';
+    document.getElementById('capacityBarFill').style.width = '0%';
+    return;
+  }
+
+  const totalElements = coverImageDimensions.total_elements;
+  let usableElements = totalElements;
+  if (currentChannelMode === 1 || currentChannelMode === 2 || currentChannelMode === 3) {
+    usableElements = Math.floor(totalElements / 3);
+  }
+  // Exclude 480 bits (60 bytes) for header
+  const maxBytes = Math.max(0, Math.floor(((usableElements - 480) * currentLsbDepth) / 8));
+  
+  let usedBytes = 0;
+  if (currentPayloadMode === 'text') {
+    const msg = document.getElementById('secretMsg').value;
+    usedBytes = new Blob([msg]).size + 64; // message + encryption overhead
+  } else {
+    const secFile = document.getElementById('secretImgFile').files[0];
+    if (secFile) usedBytes = secFile.size + 64;
+  }
+
+  const pct = Math.min(100, Math.round((usedBytes / maxBytes) * 100)) || 0;
+  const maxKb = (maxBytes / 1024).toFixed(1);
+  const usedKb = (usedBytes / 1024).toFixed(2);
+
+  document.getElementById('capacityStatsText').textContent = `${usedKb} KB used / ~${maxKb} KB max (${pct}%)`;
+  const fill = document.getElementById('capacityBarFill');
+  fill.style.width = pct + '%';
+  fill.style.background = pct > 90 ? 'var(--danger)' : pct > 60 ? 'var(--warn)' : 'linear-gradient(90deg, var(--accent2), var(--accent))';
+}
+
+// ── EMBED DATA (TIER 2) ──
+async function embedData() {
   const file = document.getElementById('embedFile').files[0];
-  const msg  = document.getElementById('secretMsg').value.trim();
+  const pwd  = document.getElementById('embedPassword').value.trim();
 
   document.getElementById('embedError').style.display = 'none';
   document.getElementById('embedResult').style.display = 'none';
 
-  if (!file) return showError('embedError', 'Please upload an image first.');
-  if (!msg)  return showError('embedError', 'Please enter a secret message.');
+  if (!file) return showError('embedError', 'Please select a cover image first.');
+  if (!pwd)  return showError('embedError', 'Please enter an encryption password.');
+  if (pwd.length < 4) return showError('embedError', 'Password must be at least 4 characters.');
 
   const fd = new FormData();
   fd.append('image', file);
-  fd.append('message', msg);
+  fd.append('password', pwd);
+  fd.append('payload_type', currentPayloadMode);
+  fd.append('lsb_depth', currentLsbDepth);
+  fd.append('channel_mode', currentChannelMode);
+
+  if (currentPayloadMode === 'text') {
+    const msg = document.getElementById('secretMsg').value.trim();
+    if (!msg) return showError('embedError', 'Please enter a secret message.');
+    fd.append('message', msg);
+  } else {
+    const secFile = document.getElementById('secretImgFile').files[0];
+    if (!secFile) return showError('embedError', 'Please select a secret image to hide.');
+    fd.append('secret_image', secFile);
+  }
 
   showLoader('embedLoader');
   try {
     const res = await fetch('/api/embed', { method: 'POST', body: fd });
-    const text = await res.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch(e) {
-      hideLoader('embedLoader');
-      return showError('embedError', 'Server response error. Check terminal for details. Raw: ' + text.slice(0, 200));
-    }
+    const data = await res.json();
+    hideLoader('embedLoader');
 
-    if (!data || data.error) {
-      hideLoader('embedLoader');
-      return showError('embedError', (data && data.error) || 'Unknown error from server.');
+    if (!data.success || data.error) {
+      return showError('embedError', data.error || 'Embedding failed.');
     }
 
     stegoB64 = data.stego_image;
-    document.getElementById('downloadBtn').style.display = 'inline-flex';
 
-    // Images
+    // 3-way image comparison
     document.getElementById('embedImages').innerHTML = `
-      <div class="img-box"><p>📷 Original Image</p><img src="data:image/png;base64,${data.original_image}"/></div>
-      <div class="img-box"><p>🔒 Stego Image (with hidden data)</p><img src="data:image/png;base64,${data.stego_image}"/></div>
+      <div class="img-box">
+        <p>📷 Original Cover</p>
+        <img src="data:image/png;base64,${data.original_image}"/>
+      </div>
+      <div class="img-box">
+        <p>🔒 Stego Image (Encrypted Data Inside)</p>
+        <img src="data:image/png;base64,${data.stego_image}"/>
+      </div>
+      <div class="img-box">
+        <p>🔬 Residual Difference Map (×40 Amplified)</p>
+        <img src="data:image/png;base64,${data.diff_image}"/>
+      </div>
     `;
 
     // Metrics
     const m = data.metrics;
-    const psnrVal = (m.psnr >= 99.99) ? '~∞ (Perfect)' : m.psnr;
-    const psnrClass = m.psnr > 40 ? 'val-good' : m.psnr > 30 ? 'val-warn' : 'val-bad';
+    const psnrDisplay = m.psnr >= 99.99 ? '~∞' : m.psnr + ' dB';
+    const psnrClass = m.psnr > 45 ? 'val-good' : m.psnr > 35 ? 'val-warn' : 'val-bad';
+
     document.getElementById('embedMetrics').innerHTML = `
-      <div class="metric-card"><div class="value ${psnrClass}">${psnrVal}</div><div class="label">PSNR (dB)</div></div>
+      <div class="metric-card"><div class="value ${psnrClass}">${psnrDisplay}</div><div class="label">PSNR</div></div>
+      <div class="metric-card"><div class="value val-good">${m.ssim}</div><div class="label">SSIM (Integrity)</div></div>
       <div class="metric-card"><div class="value">${m.mse}</div><div class="label">MSE</div></div>
-      <div class="metric-card"><div class="value">${m.message_length}</div><div class="label">Chars Hidden</div></div>
+      <div class="metric-card"><div class="value">${m.payload_bytes.toLocaleString()} B</div><div class="label">Payload Size</div></div>
       <div class="metric-card"><div class="value">${m.capacity_used_pct}%</div><div class="label">Capacity Used</div></div>
-      <div class="metric-card"><div class="value">${m.max_capacity_chars.toLocaleString()}</div><div class="label">Max Capacity (chars)</div></div>
-      <div class="metric-card"><div class="value">${m.bits_used.toLocaleString()}</div><div class="label">Bits Modified</div></div>
+      <div class="metric-card"><div class="value">${m.lsb_depth}-Bit</div><div class="label">LSB Depth</div></div>
+    `;
+
+    // Security Stack
+    document.getElementById('embedSecurityMetrics').innerHTML = `
+      <div class="sec-metric"><span class="icon">🔐</span><div><div class="name">Encryption</div><div class="val">${m.encryption}</div></div></div>
+      <div class="sec-metric"><span class="icon">🛡️</span><div><div class="name">Integrity</div><div class="val">${m.integrity}</div></div></div>
+      <div class="sec-metric"><span class="icon">🔑</span><div><div class="name">Key Derivation</div><div class="val">${m.key_derivation}</div></div></div>
+      <div class="sec-metric"><span class="icon">📡</span><div><div class="name">Channel Mode</div><div class="val">${m.channel_name}</div></div></div>
     `;
 
     showEl('embedResult');
-    hideLoader('embedLoader');
+    document.getElementById('embedResult').scrollIntoView({ behavior: 'smooth' });
   } catch (e) {
     hideLoader('embedLoader');
     showError('embedError', 'Server error: ' + e.message);
@@ -582,19 +1536,21 @@ function downloadStego() {
   if (!stegoB64) return;
   const a = document.createElement('a');
   a.href = 'data:image/png;base64,' + stegoB64;
-  a.download = 'stego_image.png';
+  a.download = 'stego_image_secured.png';
   a.click();
 }
 
-// ── EXTRACT MESSAGE ──
-async function extractMessage() {
+// ── EXTRACT DATA (TIER 2) ──
+async function extractData() {
   const file = document.getElementById('extractFile').files[0];
+  const pwd  = document.getElementById('extractPassword').value.trim();
   hideEl('extractError'); hideEl('extractResult');
 
-  if (!file) return showError('extractError', 'Please upload a stego image.');
+  if (!file) return showError('extractError', 'Please select a stego image.');
 
   const fd = new FormData();
   fd.append('image', file);
+  fd.append('password', pwd);
 
   showLoader('extractLoader');
   try {
@@ -604,26 +1560,82 @@ async function extractMessage() {
 
     if (data.error) return showError('extractError', data.error);
 
-    if (!data.success || !data.message) {
-      document.getElementById('extractedMsg').textContent = '⚠️ No hidden message found. This image may not contain embedded data created by this tool.';
-      document.getElementById('extractMeta').textContent = '';
-    } else {
-      document.getElementById('extractedMsg').textContent = data.message;
-      document.getElementById('extractMeta').textContent = `Message length: ${data.message_length} characters`;
+    if (!data.success) {
+      if (data.tampered) {
+        document.getElementById('extractTextResult').style.display = 'none';
+        document.getElementById('extractImageResult').style.display = 'none';
+        document.getElementById('extractSecurityNote').innerHTML = `
+          <div class="security-note tamper">
+            🚨 ${data.info || 'TAMPER ALERT: Stego image was modified, corrupted, or recompressed lossily after embedding! HMAC-SHA256 integrity tag mismatch.'}
+          </div>
+        `;
+        document.getElementById('extractBadges').innerHTML = `<span class="badge badge-version">⚠️ Tampered</span>`;
+        document.getElementById('extractMeta').textContent = '';
+        showEl('extractResult');
+      } else {
+        showError('extractError', data.info || 'No secret payload found or incorrect password.');
+      }
+      return;
     }
+
+    // Success! Check payload type
+    document.getElementById('extractBadges').innerHTML = `
+      <span class="badge badge-security">${data.version || 'v2.0'}</span>
+      <span class="badge badge-hmac">${data.channel_name || 'RGB'}</span>
+      <span class="badge badge-feature">${data.lsb_depth || 1}-Bit LSB</span>
+    `;
+
+    if (data.type === 'text') {
+      document.getElementById('extractedMsg').textContent = data.message;
+      document.getElementById('extractTextResult').style.display = 'block';
+      document.getElementById('extractImageResult').style.display = 'none';
+      document.getElementById('extractMeta').textContent = `Message length: ${data.message.length} characters`;
+    } else if (data.type === 'image') {
+      extractedSecretImageB64 = data.secret_image_b64;
+      extractedSecretImageFormat = (data.image_format || 'png').toLowerCase();
+      document.getElementById('extractedSecretImg').src = `data:image/${extractedSecretImageFormat};base64,${extractedSecretImageB64}`;
+      document.getElementById('extractedImgMeta').textContent = `Resolution: ${data.image_width} × ${data.image_height} px | Size: ${(data.size_bytes/1024).toFixed(1)} KB | Format: ${data.image_format}`;
+      document.getElementById('extractTextResult').style.display = 'none';
+      document.getElementById('extractImageResult').style.display = 'block';
+      document.getElementById('extractMeta').textContent = `Secret image successfully recovered and verified.`;
+    }
+
+    // Security note
+    document.getElementById('extractSecurityNote').innerHTML = `
+      <div class="security-note secure">
+        🛡️ ${data.security_note} — ${data.integrity || 'HMAC-SHA256 Match'}
+      </div>
+    `;
+
     showEl('extractResult');
+    document.getElementById('extractResult').scrollIntoView({ behavior: 'smooth' });
   } catch (e) {
     hideLoader('extractLoader');
     showError('extractError', 'Server error: ' + e.message);
   }
 }
 
-// ── STEGANALYSIS ──
+function copyExtractedText() {
+  const text = document.getElementById('extractedMsg').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('📋 Secret message copied to clipboard!');
+  });
+}
+
+function downloadExtractedSecretImage() {
+  if (!extractedSecretImageB64) return;
+  const a = document.createElement('a');
+  a.href = `data:image/${extractedSecretImageFormat};base64,${extractedSecretImageB64}`;
+  a.download = `recovered_secret_image.${extractedSecretImageFormat}`;
+  a.click();
+}
+
+// ── STEGANALYSIS (TIER 2 MULTI-CHANNEL FORENSICS) ──
 async function runAnalysis() {
   const file = document.getElementById('analyzeFile').files[0];
   hideEl('analyzeError'); hideEl('analyzeResult');
 
-  if (!file) return showError('analyzeError', 'Please upload an image to analyze.');
+  if (!file) return showError('analyzeError', 'Please select an image to analyze.');
 
   const fd = new FormData();
   fd.append('image', file);
@@ -646,7 +1658,7 @@ async function runAnalysis() {
     document.getElementById('analyzeOrigImg').src = 'data:image/png;base64,' + data.original_image;
     document.getElementById('analyzeLsbImg').src  = 'data:image/png;base64,' + data.lsb_plane_image;
 
-    // Chi-square table
+    // Chi-Square table
     const chi = data.chi_square;
     const chiClass = chi.risk_level === 'high' ? 'val-bad' : chi.risk_level === 'medium' ? 'val-warn' : 'val-good';
     document.getElementById('chiTable').innerHTML = `
@@ -657,7 +1669,7 @@ async function runAnalysis() {
       <tr><td>Verdict</td><td class="${chiClass}">${chi.verdict}</td></tr>
     `;
 
-    // LSB dist table
+    // LSB Distribution table
     const lsb = data.lsb_distribution;
     const lsbClass = lsb.suspicious ? 'val-bad' : 'val-good';
     document.getElementById('lsbTable').innerHTML = `
@@ -669,7 +1681,26 @@ async function runAnalysis() {
       <tr><td>Balance Deviation</td><td class="${lsbClass}">${lsb.balance_deviation} ${lsb.suspicious ? '⚠️' : '✅'}</td></tr>
     `;
 
-    // Extracted message
+    // Multi-Channel Forensic Breakdown (New in Tier 2)
+    if (data.channel_analysis) {
+      let chHtml = `<tr><th>Channel</th><th>Chi-Square (χ²)</th><th>p-Value</th><th>1s Ratio</th><th>Status</th></tr>`;
+      for (const [chName, info] of Object.entries(data.channel_analysis)) {
+        const isBad = info.suspicious;
+        const colorClass = isBad ? 'val-bad' : 'val-good';
+        chHtml += `
+          <tr>
+            <td><strong>${chName} Channel</strong></td>
+            <td>${info.chi_square}</td>
+            <td class="${colorClass}">${info.p_value}</td>
+            <td>${(info.ones_ratio * 100).toFixed(2)}%</td>
+            <td class="${colorClass}">${isBad ? '⚠️ Anomaly' : '✅ Natural'}</td>
+          </tr>
+        `;
+      }
+      document.getElementById('channelAnalysisTable').innerHTML = chHtml;
+    }
+
+    // Found legacy msg if any
     if (data.extracted_message) {
       document.getElementById('analyzeMsg').textContent = data.extracted_message;
       showEl('foundMsgSection');
@@ -677,17 +1708,18 @@ async function runAnalysis() {
       hideEl('foundMsgSection');
     }
 
-    // Image info
+    // Metadata
     const ii = data.image_info;
     document.getElementById('imgInfoTable').innerHTML = `
       <tr><th>Property</th><th>Value</th></tr>
-      <tr><td>Dimensions</td><td>${ii.width} × ${ii.height} px</td></tr>
+      <tr><td>Resolution</td><td>${ii.width} × ${ii.height} px</td></tr>
       <tr><td>Color Mode</td><td>${ii.mode}</td></tr>
-      <tr><td>Total Pixel Values</td><td>${ii.total_pixels.toLocaleString()}</td></tr>
-      <tr><td>Max Hide Capacity</td><td>~${Math.floor(ii.total_pixels / 8).toLocaleString()} characters</td></tr>
+      <tr><td>Total Pixels</td><td>${ii.total_pixels.toLocaleString()}</td></tr>
+      <tr><td>Max 1-Bit Capacity</td><td>~${Math.floor(ii.total_pixels / 8).toLocaleString()} bytes</td></tr>
     `;
 
     showEl('analyzeResult');
+    document.getElementById('analyzeResult').scrollIntoView({ behavior: 'smooth' });
   } catch (e) {
     hideLoader('analyzeLoader');
     showError('analyzeError', 'Server error: ' + e.message);

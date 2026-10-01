@@ -21,3 +21,7 @@ cf.exe
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Nested directory & test
+steganography/
+test_tier2.py

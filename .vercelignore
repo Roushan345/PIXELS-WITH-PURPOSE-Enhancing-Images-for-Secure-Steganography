@@ -1,0 +1,14 @@
+# Vercel Ignore List
+.git
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.exe
+cf.exe
+cloudflared.exe
+steganography/
+test_*.py
+test_image.jpg
+stego_test.png
+*.log
