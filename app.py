@@ -558,10 +558,7 @@ def image_to_base64(pil_image, fmt='PNG'):
 # ─────────────────────────────────────────────
 
 @app.route('/')
-@app.route('/api')
-@app.route('/api/')
-@app.route('/api/index')
-@app.route('/api/index.py')
+@app.route('/index')
 def index():
     return render_template('index.html')
 
