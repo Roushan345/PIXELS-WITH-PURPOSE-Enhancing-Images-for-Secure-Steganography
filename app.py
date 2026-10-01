@@ -558,10 +558,15 @@ def image_to_base64(pil_image, fmt='PNG'):
 # ─────────────────────────────────────────────
 
 @app.route('/')
+@app.route('/api')
+@app.route('/api/')
+@app.route('/api/index')
+@app.route('/api/index.py')
 def index():
     return render_template('index.html')
 
 @app.route('/api/embed', methods=['POST'])
+@app.route('/embed', methods=['POST'])
 def embed():
     """
     Tier 2 Advanced Embedding Endpoint:
@@ -668,6 +673,7 @@ def embed():
         return jsonify({'error': f'Embedding error: {str(e)}'}), 500
 
 @app.route('/api/extract', methods=['POST'])
+@app.route('/extract', methods=['POST'])
 def extract():
     """
     Tier 2 Advanced Extraction Endpoint:
@@ -768,6 +774,7 @@ def extract():
         return jsonify({'error': f'Extraction error: {str(e)}'}), 500
 
 @app.route('/api/steganalyze', methods=['POST'])
+@app.route('/steganalyze', methods=['POST'])
 def steganalyze():
     """
     Tier 2 Advanced Forensic Steganalysis:
@@ -828,6 +835,7 @@ def steganalyze():
         return jsonify({'error': f'Steganalysis error: {str(e)}'}), 500
 
 @app.route('/api/download_stego', methods=['POST'])
+@app.route('/download_stego', methods=['POST'])
 def download_stego():
     """Download the stego image as a PNG file."""
     try:
@@ -846,6 +854,7 @@ def download_stego():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/download_secret', methods=['POST'])
+@app.route('/download_secret', methods=['POST'])
 def download_secret():
     """Download the extracted secret image."""
     try:
